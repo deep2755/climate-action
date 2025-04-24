@@ -1,0 +1,340 @@
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Add click event listeners to action cards
+    const actionCards = document.querySelectorAll('.action-card');
+    actionCards.forEach(card => {
+        card.addEventListener('click', () => {
+            // Add a temporary highlight effect
+            card.classList.add('card-clicked');
+            setTimeout(() => {
+                card.classList.remove('card-clicked');
+            }, 500);
+        });
+    });
+
+    // Add a progress counter for eco-actions
+    const progressCounter = document.createElement('div');
+    progressCounter.className = 'progress-counter';
+    progressCounter.innerHTML = `
+        <p>Actions completed: <span id="completed-count">0</span>/6</p>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    `;
+    document.querySelector('.eco-actions .container').insertBefore(
+        progressCounter,
+        document.querySelector('.action-grid')
+    );
+
+    // Add click handlers for marking actions as complete
+    let completedCount = 0;
+    actionCards.forEach(card => {
+        const checkmark = document.createElement('span');
+        checkmark.className = 'checkmark';
+        checkmark.innerHTML = '✓';
+        card.appendChild(checkmark);
+
+        card.addEventListener('click', () => {
+            if (!card.classList.contains('completed')) {
+                card.classList.add('completed');
+                completedCount++;
+                showCompletionMessage(card.querySelector('h3').textContent);
+            } else {
+                card.classList.remove('completed');
+                completedCount--;
+            }
+            updateProgress();
+        });
+    });
+
+    // Show completion message with confetti effect
+    function showCompletionMessage(action) {
+        const message = document.createElement('div');
+        message.className = 'completion-message';
+        message.innerHTML = `
+            <div class="message-content">
+                <span class="emoji">🎉</span>
+                <p>Great job! You've completed: ${action}</p>
+            </div>
+        `;
+        document.body.appendChild(message);
+        
+        // Add confetti effect
+        createConfetti();
+        
+        setTimeout(() => {
+            message.remove();
+        }, 3000);
+    }
+
+    // Create confetti effect
+    function createConfetti() {
+        const colors = ['#2ECC71', '#3498DB', '#9B59B6', '#F1C40F', '#E74C3C'];
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => {
+                confetti.remove();
+            }, 5000);
+        }
+    }
+
+    // Update progress bar and counter
+    function updateProgress() {
+        const progressFill = document.querySelector('.progress-fill');
+        const completedCountElement = document.getElementById('completed-count');
+        const percentage = (completedCount / actionCards.length) * 100;
+        
+        progressFill.style.width = ${percentage}%;
+        completedCountElement.textContent = completedCount;
+    }
+
+    // Add fun fact carousel
+    const factCards = document.querySelectorAll('.fact-card');
+    let currentFactIndex = 0;
+
+    function rotateFacts() {
+        factCards.forEach((card, index) => {
+            if (index === currentFactIndex) {
+                card.style.display = 'block';
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, 100);
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        currentFactIndex = (currentFactIndex + 1) % factCards.length;
+    }
+
+    // Start the carousel if there are multiple facts
+    if (factCards.length > 1) {
+        setInterval(rotateFacts, 5000);
+    }
+
+    // Add smooth scroll for navigation
+    const header = document.querySelector('.header');
+    let lastScroll = 0;
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll <= 0) {
+            header.classList.remove('scroll-up');
+            return;
+        }
+        
+        if (currentScroll > lastScroll) {
+            header.classList.add('scroll-up');
+        } else {
+            header.classList.remove('scroll-up');
+        }
+        lastScroll = currentScroll;
+    });
+
+    // Add click handlers for CTA buttons
+    const ctaButtons = document.querySelectorAll('.cta-button');
+    ctaButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const card = button.closest('.option-card');
+            card.classList.add('button-clicked');
+            setTimeout(() => {
+                card.classList.remove('button-clicked');
+            }, 500);
+            
+            // Add your action here (e.g., open modal, navigate to page)
+            console.log(Button clicked: ${button.textContent});
+        });
+    });
+
+    // Add hover effect for social links
+    const socialLinks = document.querySelectorAll('.social-link');
+    socialLinks.forEach(link => {
+        link.addEventListener('mouseenter', () => {
+            link.style.transform = 'scale(1.1)';
+        });
+        link.addEventListener('mouseleave', () => {
+            link.style.transform = 'scale(1)';
+        });
+    });
+
+    // Add scroll reveal animation
+    const revealElements = document.querySelectorAll('.action-card, .fact-card, .option-card, .climate-card, .impact-card, .solution-card');
+    
+    function checkReveal() {
+        revealElements.forEach(element => {
+            const elementTop = element.getBoundingClientRect().top;
+            const elementBottom = element.getBoundingClientRect().bottom;
+            
+            if (elementTop < window.innerHeight && elementBottom > 0) {
+                element.classList.add('revealed');
+            }
+        });
+    }
+
+    window.addEventListener('scroll', checkReveal);
+    checkReveal(); // Initial check
+
+    // Add local storage for completed actions
+    function saveProgress() {
+        const completedActions = Array.from(actionCards)
+            .map(card => card.classList.contains('completed'))
+            .map(completed => completed ? '1' : '0')
+            .join('');
+        localStorage.setItem('completedActions', completedActions);
+    }
+
+    function loadProgress() {
+        const savedProgress = localStorage.getItem('completedActions');
+        if (savedProgress) {
+            const completedArray = savedProgress.split('');
+            actionCards.forEach((card, index) => {
+                if (completedArray[index] === '1') {
+                    card.classList.add('completed');
+                    completedCount++;
+                }
+            });
+            updateProgress();
+        }
+    }
+
+    // Save progress when marking actions as complete
+    actionCards.forEach(card => {
+        card.addEventListener('click', saveProgress);
+    });
+
+    // Load saved progress on page load
+    loadProgress();
+
+    // Add climate change section animations
+    const climateCards = document.querySelectorAll('.climate-card');
+    const actionItems = document.querySelectorAll('.action-item');
+
+    function animateClimateStats() {
+        climateCards.forEach(card => {
+            const stats = card.querySelectorAll('.stat-value');
+            stats.forEach(stat => {
+                const targetValue = stat.textContent;
+                stat.textContent = '0';
+                let currentValue = 0;
+                const duration = 2000;
+                const increment = parseInt(targetValue) / (duration / 16);
+                
+                const animate = () => {
+                    currentValue += increment;
+                    if (currentValue < parseInt(targetValue)) {
+                        stat.textContent = Math.floor(currentValue) + (targetValue.includes('°C') ? '°C' : '');
+                        requestAnimationFrame(animate);
+                    } else {
+                        stat.textContent = targetValue;
+                    }
+                };
+                
+                animate();
+            });
+        });
+    }
+
+    // Animate stats when section comes into view
+    const climateSection = document.querySelector('.climate-change');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateClimateStats();
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    observer.observe(climateSection);
+
+    // Add hover effects for action items
+    actionItems.forEach(item => {
+        item.addEventListener('mouseenter', () => {
+            item.style.transform = 'translateX(10px)';
+        });
+        item.addEventListener('mouseleave', () => {
+            item.style.transform = 'translateX(0)';
+        });
+    });
+
+    // Add click handlers for climate cards
+    climateCards.forEach(card => {
+        card.addEventListener('click', () => {
+            card.classList.add('card-clicked');
+            setTimeout(() => {
+                card.classList.remove('card-clicked');
+            }, 500);
+        });
+    });
+
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Add parallax effect to hero section
+    const hero = document.querySelector('.hero');
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        hero.style.backgroundPositionY = -(scrolled * 0.5) + 'px';
+    });
+
+    // Add completion message styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .completion-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .message-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            border-radius: 50%;
+            animation: fall linear forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100vh) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+});
